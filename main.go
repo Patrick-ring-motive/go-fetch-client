@@ -26,9 +26,7 @@ type FetchResponse struct {
 	Async    bool
 }
 
-func ptr[T any](p T) *T {
-	return &p
-}
+
 
 func (f *FetchResponse) Response() (*http.Response, error) {
   if f.Error != nil {
@@ -124,7 +122,7 @@ func fetch(req FetchRequest) FetchResponse {
 	}
 	fr.Promise = &Promise[*FetchResponse]{
 		Result: &fr,
-		Done:   true,
+		Done:   ptr(true),
 	}
 	return fr
 }
