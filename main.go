@@ -26,36 +26,34 @@ type FetchResponse struct {
 	Async    bool
 }
 
-
-
 func (f *FetchResponse) Response() (*http.Response, error) {
-  if f.Error != nil {
-    return nil, f.Error
-  }
-  r := f.Promise.Await().Result.response
-  if f.Error != nil {
-    return r, f.Error
-  }
-  if r == nil{
-    return nil, fmt.Errorf("nil response")
-  }
-  return r, nil
+	if f.Error != nil {
+		return nil, f.Error
+	}
+	r := f.Promise.Await().Result.response
+	if f.Error != nil {
+		return r, f.Error
+	}
+	if r == nil {
+		return nil, fmt.Errorf("nil response")
+	}
+	return r, nil
 }
 
 func (f *FetchResponse) Bytes() ([]byte, error) {
-  if f.Error != nil {
-    return nil, f.Error
-  }
-  p := f.Promise.Await()
-  if p.Error != nil {
-    f.Error = p.Error
-    return nil, f.Error
-  }
-  b := p.Result.Body.Await().Result
-  if b.Error != nil {
-    f.Error = b.Error
-  }
-  return b.Result, f.Error
+	if f.Error != nil {
+		return nil, f.Error
+	}
+	p := f.Promise.Await()
+	if p.Error != nil {
+		f.Error = p.Error
+		return nil, f.Error
+	}
+	b := p.Result.Body.Await().Result
+	if b.Error != nil {
+		f.Error = b.Error
+	}
+	return b.Result, f.Error
 }
 
 func (f *FetchResponse) Text() (string, error) {
@@ -64,13 +62,13 @@ func (f *FetchResponse) Text() (string, error) {
 }
 
 func (f *FetchResponse) JSON() (interface{}, error) {
-  b, e := f.Bytes()
-  if e != nil {
-    return nil, e
-  }
-  var v interface{}
-  e = json.Unmarshal(b, &v)
-  return v, e
+	b, e := f.Bytes()
+	if e != nil {
+		return nil, e
+	}
+	var v interface{}
+	e = json.Unmarshal(b, &v)
+	return v, e
 }
 
 func main() {
@@ -128,9 +126,9 @@ func fetch(req FetchRequest) FetchResponse {
 }
 
 func fetchAsync(req FetchRequest, fetchSync func(FetchRequest) FetchResponse) FetchResponse {
-  fr := FetchResponse{
-    Async:true,
-  }
+	fr := FetchResponse{
+		Async: true,
+	}
 	promise := NewPromise(func() *FetchResponse {
 		fetchRes := fetchSync(req)
 		fetchRes.Async = true
@@ -140,29 +138,29 @@ func fetchAsync(req FetchRequest, fetchSync func(FetchRequest) FetchResponse) Fe
 		return NewOption(func() ([]byte, error) {
 			p := promise.Await()
 			if p.Error != nil {
-        fr.Error = p.Error
+				fr.Error = p.Error
 				return nil, p.Error
 			}
 			r := p.Result
 			if r.Error != nil {
-        p.Error = r.Error
-        fr.Error = r.Error
+				p.Error = r.Error
+				fr.Error = r.Error
 				return nil, r.Error
 			}
-			body,err:= ReadResponseBody(r.response)
-      if err != nil {
-        r.Error = err
-        p.Error = err
-        fr.Error = err
-        return nil,err
-      }
-      return body,nil
+			body, err := ReadResponseBody(r.response)
+			if err != nil {
+				r.Error = err
+				p.Error = err
+				fr.Error = err
+				return nil, err
+			}
+			return body, nil
 		})()
 	})
 	fr.Promise = &promise
-	fr.Body =    thunk
-	fr.Error =   promise.Error
-  return fr
+	fr.Body = thunk
+	fr.Error = promise.Error
+	return fr
 }
 
 func Fetch(req FetchRequest) FetchResponse {
